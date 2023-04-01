@@ -39,7 +39,7 @@ const bot = new TelegramBot(telegramToken, { polling: true });
 
 // Message Handlers
 
-bot.onText(/\/c reset/, (msg, match) => {
+bot.onText(/\/reset/, (msg, match) => {
   const chatId = msg.chat.id;
   console.log(msg);
   if (chatId == telegramAdminId) {
@@ -48,7 +48,7 @@ bot.onText(/\/c reset/, (msg, match) => {
   }
 });
 
-bot.onText(/\/c sendMsg (.+)/, async (msg, match) => {
+bot.onText(/\/sendMsg (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   if (chatId == telegramAdminId) {
     let query = match[1];
@@ -60,8 +60,24 @@ bot.onText(/\/c sendMsg (.+)/, async (msg, match) => {
   }
 });
 
+bot.onText(/\/sendpic/, (msg) => {
+  bot.sendPhoto(
+    msg.chat.id,
+    "https://sun9-77.userapi.com/impg/klcqWtISQK1oxuoR7aIK9gEP2ET82hYGyP0NwQ/xBIyFUcdg5o.jpg?size=397x470&quality=95&sign=4d5c5e1fa23583bb4e5805c0739231db&type=album",
+    { caption: "Бля! \nЯ со смены! " }
+  );
+});
+
+bot.onText(/\/c keyboard/, (msg) => {
+  bot.sendMessage(msg.chat.id, "Welcome", {
+    reply_markup: {
+      keyboard: [["/c sendpic", "Second sample"], ["Keyboard"], ["I'm robot"]],
+    },
+  });
+});
+
 bot.on("message", async (msg) => {
-  if (msg.text.indexOf("/c") < 0) {
+  if (msg.text.indexOf("/") < 0) {
     if (response) {
       response = await chatGptClient.sendMessage(msg.text, {
         conversationId: response.conversationId,
