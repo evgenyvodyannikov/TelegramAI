@@ -40,12 +40,23 @@ const bot = new TelegramBot(telegramToken, { polling: true });
 // Message Handlers
 
 bot.onText(/\/c reset/, (msg, match) => {
-
   const chatId = msg.chat.id;
-  console.log(msg)
+  console.log(msg);
   if (chatId == telegramAdminId) {
     response = null;
     bot.sendMessage(chatId, "Dialog was reset successfully!");
+  }
+});
+
+bot.onText(/\/c sendMsg (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  if (chatId == telegramAdminId) {
+    let query = match[1];
+    let userId = query.substring(0, query.indexOf("|"));
+    let message = query.substring(query.indexOf("|") + 1, query.length).trim();
+    response = await chatGptClient.sendMessage(message);
+    bot.sendMessage(userId, response.response);
+    response = null;
   }
 });
 
