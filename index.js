@@ -33,6 +33,7 @@ const chatGptClient = new ChatGPTClient(
 );
 
 let response;
+let isReady = true;
 
 // Create the bot
 const bot = new TelegramBot(telegramToken, { polling: true });
@@ -50,13 +51,15 @@ bot.onText(/\/reset/, (msg, match) => {
 
 bot.onText(/\/sendMsg (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
-  if (chatId == telegramAdminId) {
+  if (isReady && chatId == telegramAdminId) {
+    isReady = false;
     let query = match[1];
     let userId = query.substring(0, query.indexOf("|"));
     let message = query.substring(query.indexOf("|") + 1, query.length).trim();
     response = await chatGptClient.sendMessage(message);
     bot.sendMessage(userId, response.response);
     response = null;
+    isReady = true;
   }
 });
 
@@ -77,7 +80,9 @@ bot.onText(/\/keyboard/, (msg) => {
 });
 
 bot.on("message", async (msg) => {
-  if (msg.text.indexOf("/") < 0) {
+  if (isReady && msg.text.indexOf("/") < 0) {
+    isReady = false;
+
     if (response) {
       response = await chatGptClient.sendMessage(msg.text, {
         conversationId: response.conversationId,
@@ -87,12 +92,10 @@ bot.on("message", async (msg) => {
       response = await chatGptClient.sendMessage(msg.text);
     }
 
-    console.log(response);
-    console.log(msg);
-
     const chatId = msg.chat.id;
 
     bot.sendMessage(chatId, response.response);
+    isReady = true;
   }
 });
 
