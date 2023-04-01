@@ -68,7 +68,7 @@ bot.onText(/\/sendpic/, (msg) => {
   );
 });
 
-bot.onText(/\/c keyboard/, (msg) => {
+bot.onText(/\/keyboard/, (msg) => {
   bot.sendMessage(msg.chat.id, "Welcome", {
     reply_markup: {
       keyboard: [["/c sendpic", "Second sample"], ["Keyboard"], ["I'm robot"]],
