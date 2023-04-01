@@ -39,40 +39,34 @@ const bot = new TelegramBot(telegramToken, { polling: true });
 
 // Message Handlers
 
-// Matches "/echo [whatever]"
-bot.onText(/\/c (.+)/, (msg, match) => {
-  // 'msg' is the received Message from Telegram
-  // 'match' is the result of executing the regexp above on the text content
-  // of the message
+bot.onText(/\/c reset/, (msg, match) => {
 
   const chatId = msg.chat.id;
-  if(chatId == telegramAdminId){
-        const resp = match[1];
-
-    // send back the matched "whatever" to the chat
-        bot.sendMessage(chatId, resp);
+  console.log(msg)
+  if (chatId == telegramAdminId) {
+    response = null;
+    bot.sendMessage(chatId, "Dialog was reset successfully!");
   }
-
 });
 
 bot.on("message", async (msg) => {
+  if (msg.text.indexOf("/c") < 0) {
+    if (response) {
+      response = await chatGptClient.sendMessage(msg.text, {
+        conversationId: response.conversationId,
+        parentMessageId: response.messageId,
+      });
+    } else {
+      response = await chatGptClient.sendMessage(msg.text);
+    }
 
-  if (response) {
-    response = await chatGptClient.sendMessage(msg.text, {
-      conversationId: response.conversationId,
-      parentMessageId: response.messageId,
-    });
+    console.log(response);
+    console.log(msg);
+
+    const chatId = msg.chat.id;
+
+    bot.sendMessage(chatId, response.response);
   }
-  else{
-    response = await chatGptClient.sendMessage(msg.text);
-  }
-
-  console.log(response);
-  console.log(msg)
-
-  const chatId = msg.chat.id;
-
-  bot.sendMessage(chatId, response.response);
 });
 
 // response = await chatGptClient.sendMessage("Hello!");
