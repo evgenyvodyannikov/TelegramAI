@@ -56,8 +56,10 @@ bot.onText(/\/sendMsg (.+)/, async (msg, match) => {
     let query = match[1];
     let userId = query.substring(0, query.indexOf("|"));
     let message = query.substring(query.indexOf("|") + 1, query.length).trim();
+    bot.sendMessage(telegramAdminId, "Generating response");
     response = await chatGptClient.sendMessage(message);
     bot.sendMessage(userId, response.response);
+    bot.sendMessage(telegramAdminId, "Success.");
     response = null;
     isReady = true;
   }
@@ -80,7 +82,11 @@ bot.onText(/\/keyboard/, (msg) => {
 });
 
 bot.on("message", async (msg) => {
-  if (isReady && msg.text.indexOf("/") < 0) {
+  console.log(isReady)
+  if (isReady && msg.text.indexOf("/") > 0) {
+    const chatId = msg.chat.id;
+
+    bot.sendMessage(chatId, "Generating response");
     isReady = false;
 
     if (response) {
@@ -91,8 +97,6 @@ bot.on("message", async (msg) => {
     } else {
       response = await chatGptClient.sendMessage(msg.text);
     }
-
-    const chatId = msg.chat.id;
 
     bot.sendMessage(chatId, response.response);
     isReady = true;
