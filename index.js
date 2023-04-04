@@ -4,11 +4,14 @@ import ChatGPTClient from "@waylaidwanderer/chatgpt-api";
 
 dotenv.config();
 
-// Env Variables
+//#region Env Variables
 const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
 const accessToken = process.env.OPENAI_ACCESS_TOKEN;
 const telegramAdminId = process.env.TELEGRAM_ADMIN_ID;
+const telegramUserId = process.env.TELEGRAM_USER_ID;
+//#endregion
 
+//#region ChatGPT Client Settings
 const clientOptions = {
   modelOptions: {
     model: "gpt-3.5-turbo",
@@ -32,18 +35,28 @@ const chatGptClient = new ChatGPTClient(
   cacheOptions
 );
 
+//#endregion
+
+//#region Utility
 let response;
 let isReady = true;
 
-// Create the bot
-const bot = new TelegramBot(telegramToken, { polling: true });
+let accessAllowedUsers = [telegramAdminId, telegramUserId];
 
-// Message Handlers
+const checkPesmission = (userId) => {
+  if (accessAllowedUsers.includes(String(userId))) {
+    return true;
+  }
+  return false;
+};
+//#endregion
+
+//#region Bot
+const bot = new TelegramBot(telegramToken, { polling: true });
 
 bot.onText(/\/reset/, (msg, match) => {
   const chatId = msg.chat.id;
-  console.log(msg);
-  if (chatId == telegramAdminId) {
+  if (checkPesmission(chatId)) {
     response = null;
     bot.sendMessage(chatId, "Dialog was reset successfully!");
   }
@@ -51,7 +64,7 @@ bot.onText(/\/reset/, (msg, match) => {
 
 bot.onText(/\/sendMsg (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
-  if (isReady && chatId == telegramAdminId) {
+  if (isReady && checkPesmission(chatId)) {
     isReady = false;
     let query = match[1];
     let userId = query.substring(0, query.indexOf("|"));
@@ -76,16 +89,14 @@ bot.onText(/\/sendpic/, (msg) => {
 bot.onText(/\/keyboard/, (msg) => {
   bot.sendMessage(msg.chat.id, "Welcome", {
     reply_markup: {
-      keyboard: [["/c sendpic", "Second sample"], ["Keyboard"], ["I'm robot"]],
+      keyboard: [["/sendpic", "Hello, Chat!"], ["/keyboard"]],
     },
   });
 });
 
 bot.on("message", async (msg) => {
-  console.log(isReady)
-  if (isReady && msg.text.indexOf("/") > 0) {
-    const chatId = msg.chat.id;
-
+  const chatId = msg.chat.id;
+  if (isReady && msg.text.indexOf("/") != 0 && checkPesmission(chatId)) {
     bot.sendMessage(chatId, "Generating response");
     isReady = false;
 
@@ -103,32 +114,4 @@ bot.on("message", async (msg) => {
   }
 });
 
-// response = await chatGptClient.sendMessage("Hello!");
-// console.log(response); // { response: 'Hello! How can I assist you today?', conversationId: '...', messageId: '...' }
-
-// response = await chatGptClient.sendMessage("Write a short poem about cats.", {
-//   conversationId: response.conversationId,
-//   parentMessageId: response.messageId,
-// });
-// console.log(response.response); // Soft and sleek, with eyes that gleam,\nCats are creatures of grace supreme.\n...
-// console.log();
-
-// response = await chatGptClient.sendMessage("Now write it in French.", {
-//   conversationId: response.conversationId,
-//   parentMessageId: response.messageId,
-//   // If you want streamed responses, you can set the `onProgress` callback to receive the response as it's generated.
-//   // You will receive one token at a time, so you will need to concatenate them yourself.
-//   onProgress: (token) => process.stdout.write(token),
-// });
-// console.log();
-// console.log(response.response); // Doux et élégant, avec des yeux qui brillent,\nLes chats sont des créatures de grâce suprême.\n...
-
-// response = await chatGptClient.sendMessage("Repeat my 2nd message verbatim.", {
-//   conversationId: response.conversationId,
-//   parentMessageId: response.messageId,
-//   // If you want streamed responses, you can set the `onProgress` callback to receive the response as it's generated.
-//   // You will receive one token at a time, so you will need to concatenate them yourself.
-//   onProgress: (token) => process.stdout.write(token),
-// });
-// console.log();
-// console.log(response.response); // "Write a short poem about cats."
+//#endregion
