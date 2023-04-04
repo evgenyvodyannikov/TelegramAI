@@ -38,7 +38,7 @@ const chatGptClient = new ChatGPTClient(
 //#endregion
 
 //#region Utility
-let response;
+let responses = [{ ChatId: null, Data: null }];
 let isReady = true;
 
 let accessAllowedUsers = [telegramAdminId, telegramUserId];
@@ -54,10 +54,10 @@ const checkPesmission = (userId) => {
 //#region Bot
 const bot = new TelegramBot(telegramToken, { polling: true });
 
-bot.onText(/\/reset/, (msg, match) => {
+bot.onText(/\/reset/, (msg) => {
   const chatId = msg.chat.id;
   if (checkPesmission(chatId)) {
-    response = null;
+    responses.filter(response => response.ChatId == chatId) = [];
     bot.sendMessage(chatId, "Dialog was reset successfully!");
   }
 });
@@ -70,10 +70,9 @@ bot.onText(/\/sendMsg (.+)/, async (msg, match) => {
     let userId = query.substring(0, query.indexOf("|"));
     let message = query.substring(query.indexOf("|") + 1, query.length).trim();
     bot.sendMessage(telegramAdminId, "Generating response");
-    response = await chatGptClient.sendMessage(message);
-    bot.sendMessage(userId, response.response);
+    let resData =  await chatGptClient.sendMessage(message);
+    bot.sendMessage(userId, resData.response);
     bot.sendMessage(telegramAdminId, "Success.");
-    response = null;
     isReady = true;
   }
 });
@@ -89,7 +88,7 @@ bot.onText(/\/sendpic/, (msg) => {
 bot.onText(/\/keyboard/, (msg) => {
   bot.sendMessage(msg.chat.id, "Welcome", {
     reply_markup: {
-      keyboard: [["/sendpic", "Hello, Chat!"], ["/keyboard"]],
+      keyboard: [["/sendpic", "Hello, ChatGPT!"], ["/keyboard"]],
     },
   });
 });
@@ -103,17 +102,20 @@ bot.on("message", async (msg) => {
       .then((result) => (loadingMsgId = result.message_id));
     isReady = false;
 
-    if (response) {
-      response = await chatGptClient.sendMessage(msg.text, {
-        conversationId: response.conversationId,
-        parentMessageId: response.messageId,
+    let currentUserRes = responses.filter(response => response.ChatId == chatId)[0];
+    if (currentUserRes) {
+      currentUserRes.Data = await chatGptClient.sendMessage(msg.text, {
+        conversationId: currentUserRes.Data.conversationId,
+        parentMessageId: currentUserRes.Data.messageId,
       });
     } else {
-      response = await chatGptClient.sendMessage(msg.text);
+      let newRes = await chatGptClient.sendMessage(msg.text);
+      let index = responses.push({ChatId: chatId, Data: newRes});
+      currentUserRes = responses[index - 1];
     }
     bot.deleteMessage(chatId, loadingMsgId);
     //bot.editMessageText(response.response, {chat_id: chatId, message_id: loadingMsgId})
-    bot.sendMessage(chatId, response.response);
+    bot.sendMessage(chatId, currentUserRes.Data.response);
     isReady = true;
   }
 });
