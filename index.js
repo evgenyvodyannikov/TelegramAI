@@ -97,7 +97,10 @@ bot.onText(/\/keyboard/, (msg) => {
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   if (isReady && msg.text.indexOf("/") != 0 && checkPesmission(chatId)) {
-    bot.sendMessage(chatId, "Generating response");
+    let loadingMsgId = 0;
+    await bot
+      .sendMessage(chatId, "Loading...")
+      .then((result) => (loadingMsgId = result.message_id));
     isReady = false;
 
     if (response) {
@@ -108,7 +111,8 @@ bot.on("message", async (msg) => {
     } else {
       response = await chatGptClient.sendMessage(msg.text);
     }
-
+    bot.deleteMessage(chatId, loadingMsgId);
+    //bot.editMessageText(response.response, {chat_id: chatId, message_id: loadingMsgId})
     bot.sendMessage(chatId, response.response);
     isReady = true;
   }
