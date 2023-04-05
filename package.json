@@ -16,6 +16,7 @@
     "@waylaidwanderer/chatgpt-api": "^1.33.2",
     "dotenv": "^16.0.3",
     "node-telegram-bot-api": "^0.61.0",
-    "nodemon": "^2.0.22"
+    "nodemon": "^2.0.22",
+    "pm2": "^5.3.0"
   }
 }
