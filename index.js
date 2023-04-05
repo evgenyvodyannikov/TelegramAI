@@ -57,7 +57,7 @@ const bot = new TelegramBot(telegramToken, { polling: true });
 bot.onText(/\/reset/, (msg) => {
   const chatId = msg.chat.id;
   if (checkPesmission(chatId)) {
-    responses.filter(response => response.ChatId == chatId) = [];
+    responses.filter(response => response.ChatId == chatId)[0].Data = null;
     bot.sendMessage(chatId, "Dialog was reset successfully!");
   }
 });
@@ -103,7 +103,7 @@ bot.on("message", async (msg) => {
     isReady = false;
 
     let currentUserRes = responses.filter(response => response.ChatId == chatId)[0];
-    if (currentUserRes) {
+    if (currentUserRes?.Data) {
       currentUserRes.Data = await chatGptClient.sendMessage(msg.text, {
         conversationId: currentUserRes.Data.conversationId,
         parentMessageId: currentUserRes.Data.messageId,
