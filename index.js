@@ -97,6 +97,13 @@ bot.onText(/\/random cat/, (msg) => {
   });
 });
 
+bot.onText(/\/random capybara/, (msg) => {
+  let url = `https://api.capy.lol/v1/capybara?${Date.now()}`; // To avoid Telegram sending the same picture because url the same
+  bot.sendPhoto(msg.chat.id, url, {
+    caption: "Here is your random capybara!",
+  });
+});
+
 bot.onText(/\/cat say(.+)/, async (msg, match) => {
   let catWords = match[1];
   let url = `https://cataas.com/cat/says/${catWords}`;
@@ -108,7 +115,7 @@ bot.onText(/\/cat say(.+)/, async (msg, match) => {
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, "Welcome to ChatGPT bot!", {
     reply_markup: {
-      keyboard: [["/reset dialogue", "/random cat"], ["/help"]],
+      keyboard: [["/reset dialogue", "/help"], ["/random cat", "/random capybara"]],
     },
   });
 });
