@@ -57,8 +57,11 @@ const bot = new TelegramBot(telegramToken, { polling: true });
 bot.onText(/\/reset/, (msg) => {
   const chatId = msg.chat.id;
   if (checkPesmission(chatId)) {
-    responses.filter((response) => response.ChatId == chatId)[0].Data = null;
-    bot.sendMessage(chatId, "Dialog was reset successfully!");
+    let currentCoversation = responses.filter((response) => response.ChatId == chatId)[0];
+    if(currentCoversation){
+      currentCoversation.Data = null;
+    }
+    bot.sendMessage(chatId, "Dialogue was reset successfully!");
   }
 });
 
@@ -77,18 +80,46 @@ bot.onText(/\/sendMsg (.+)/, async (msg, match) => {
   }
 });
 
-bot.onText(/\/cat/, (msg) => {
+bot.onText(/\/random cat/, (msg) => {
   let url = `https://cataas.com/cat?${Date.now()}`; // To avoid Telegram sending the same picture because url the same
   bot.sendPhoto(msg.chat.id, url, {
-    caption: "Here is your random cat!"
+    caption: "Here is your random cat!",
   });
 });
 
-bot.onText(/\/keyboard/, (msg) => {
-  bot.sendMessage(msg.chat.id, "Welcome", {
+bot.onText(/\/cat say(.+)/, async (msg, match) => {
+  let catWords = match[1];
+  let url = `https://cataas.com/cat/says/${catWords}`;
+  bot.sendPhoto(msg.chat.id, url, {
+    caption: "He said it!",
+  });
+});
+
+bot.onText(/\/start/, (msg) => {
+  bot.sendMessage(msg.chat.id, "Welcome to ChatGPT bot!", {
     reply_markup: {
-      keyboard: [["/reset", "/cat"], ["/keyboard"]],
+      keyboard: [["/reset dialogue", "/random cat"], ["/help"]],
     },
+  });
+});
+
+bot.onText(/\/help/, (msg) => {
+  let help = `Welcome to ChatGPT bot!
+
+Here is the list of available commands:
+  
+  1. random cat - Sends the image of a random cat
+  2. cat say **{your text here}** - Sends the image of a random cat with specified label
+  3. reset or reset dialogue - Resets current ChatGPT dialogue and allows to start new conversation
+  4. sendMsg **{telegramId}|{request to ChatGPT}** - Sends request to ChatGPT and return response to specified telegram user
+  5. start - Displays keyboard
+    
+To ask the question to ChatGPT just send some question to this chat. 
+
+Example: What is pizza?`;
+
+  bot.sendMessage(msg.chat.id, help, {
+    parse_mode: "Markdown",
   });
 });
 
@@ -115,7 +146,6 @@ bot.on("message", async (msg) => {
       currentUserRes = responses[index - 1];
     }
     bot.deleteMessage(chatId, loadingMsgId);
-    console.log(currentUserRes.Data);
     //bot.editMessageText(response.response, {chat_id: chatId, message_id: loadingMsgId})
     bot.sendMessage(chatId, currentUserRes.Data.response, {
       parse_mode: "Markdown",
