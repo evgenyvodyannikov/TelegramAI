@@ -57,8 +57,10 @@ const bot = new TelegramBot(telegramToken, { polling: true });
 bot.onText(/\/reset/, (msg) => {
   const chatId = msg.chat.id;
   if (checkPesmission(chatId)) {
-    let currentCoversation = responses.filter((response) => response.ChatId == chatId)[0];
-    if(currentCoversation){
+    let currentCoversation = responses.filter(
+      (response) => response.ChatId == chatId
+    )[0];
+    if (currentCoversation) {
       currentCoversation.Data = null;
     }
     bot.sendMessage(chatId, "Dialogue was reset successfully!");
@@ -69,13 +71,21 @@ bot.onText(/\/sendMsg (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   if (isReady && checkPesmission(chatId)) {
     isReady = false;
+
     let query = match[1];
     let userId = query.substring(0, query.indexOf("|"));
     let message = query.substring(query.indexOf("|") + 1, query.length).trim();
-    bot.sendMessage(telegramAdminId, "Generating response");
+
+    let loadingMsgId = 0;
+
+    await bot
+      .sendMessage(telegramAdminId, "Generating response")
+      .then((result) => (loadingMsgId = result.message_id));
+
     let resData = await chatGptClient.sendMessage(message);
     bot.sendMessage(userId, resData.response);
-    bot.sendMessage(telegramAdminId, "Success.");
+    bot.deleteMessage(chatId, loadingMsgId);
+    bot.sendMessage(chatId, resData.response);
     isReady = true;
   }
 });
@@ -121,6 +131,16 @@ Example: What is pizza?`;
   bot.sendMessage(msg.chat.id, help, {
     parse_mode: "Markdown",
   });
+});
+
+bot.onText(/\/users/, (msg) => {
+  const chatId = msg.chat.id;
+  if (checkPesmission(chatId)) {
+    let users = accessAllowedUsers.join("\n");
+    bot.sendMessage(chatId, users, {
+      parse_mode: "Markdown",
+    });
+  }
 });
 
 bot.on("message", async (msg) => {
