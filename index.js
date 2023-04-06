@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import TelegramBot from "node-telegram-bot-api";
+import { KeyvFile } from 'keyv-file';
 import ChatGPTClient from "@waylaidwanderer/chatgpt-api";
 
 dotenv.config();
@@ -27,7 +28,9 @@ const clientOptions = {
   debug: false,
 };
 
-const cacheOptions = {};
+const cacheOptions = {
+  store: new KeyvFile({ filename: 'cache.json' })
+};
 
 const chatGptClient = new ChatGPTClient(
   accessToken,

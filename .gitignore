@@ -136,6 +136,9 @@ dist
 # Docusaurus cache and generated files
 .docusaurus
 
+#keyv cache
+cache.json
+
 # Serverless directories
 .serverless/
 
