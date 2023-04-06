@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import TelegramBot from "node-telegram-bot-api";
-import { KeyvFile } from 'keyv-file';
+import { KeyvFile } from "keyv-file";
 import ChatGPTClient from "@waylaidwanderer/chatgpt-api";
 
 dotenv.config();
@@ -29,7 +29,7 @@ const clientOptions = {
 };
 
 const cacheOptions = {
-  store: new KeyvFile({ filename: 'cache.json' })
+  store: new KeyvFile({ filename: "cache.json" }),
 };
 
 const chatGptClient = new ChatGPTClient(
@@ -43,6 +43,11 @@ const chatGptClient = new ChatGPTClient(
 //#region Utility
 let responses = [{ ChatId: null, Data: null }];
 let isReady = true;
+let welcomeMessage =
+  "Welcome to ChatGPT bot!\n\n" +
+  "You can find the list of available commands here:\n" +
+  "[GitHub.com](https://github.com/evgenyvodyannikov/TelegramAI)\n\n" +
+  "To ask the question to ChatGPT just send some text to this chat, for example: *What is pizza?*";
 
 let accessAllowedUsers = [telegramAdminId, telegramUserId];
 
@@ -57,6 +62,7 @@ const checkPesmission = (userId) => {
 //#region Bot
 const bot = new TelegramBot(telegramToken, { polling: true });
 
+//#region Administrative Funcs
 bot.onText(/\/reset/, (msg) => {
   const chatId = msg.chat.id;
   if (checkPesmission(chatId)) {
@@ -67,6 +73,16 @@ bot.onText(/\/reset/, (msg) => {
       currentCoversation.Data = null;
     }
     bot.sendMessage(chatId, "Dialogue was reset successfully!");
+  }
+});
+
+bot.onText(/\/users/, (msg) => {
+  const chatId = msg.chat.id;
+  if (checkPesmission(chatId)) {
+    let users = accessAllowedUsers.join("\n");
+    bot.sendMessage(chatId, users, {
+      parse_mode: "Markdown",
+    });
   }
 });
 
@@ -92,7 +108,9 @@ bot.onText(/\/sendMsg (.+)/, async (msg, match) => {
     isReady = true;
   }
 });
+//#endregion
 
+//#region Cats&Capybaras
 bot.onText(/\/random cat/, (msg) => {
   let url = `https://cataas.com/cat?${Date.now()}`; // To avoid Telegram sending the same picture because url the same
   bot.sendPhoto(msg.chat.id, url, {
@@ -114,44 +132,27 @@ bot.onText(/\/cat say(.+)/, async (msg, match) => {
     caption: "He said it!",
   });
 });
+//#endregion
 
+//#region Start&Help
 bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, "Welcome to ChatGPT bot!", {
+  bot.sendMessage(msg.chat.id, welcomeMessage, {
     reply_markup: {
-      keyboard: [["/reset dialogue", "/help"], ["/random cat", "/random capybara"]],
+      keyboard: [
+        ["/reset dialogue", "/help"],
+        ["/random cat", "/random capybara"],
+      ],
     },
-  });
-});
-
-bot.onText(/\/help/, (msg) => {
-  let help = `Welcome to ChatGPT bot!
-
-Here is the list of available commands:
-  
-  1. random cat - Sends the image of a random cat
-  2. cat say **{your text here}** - Sends the image of a random cat with specified label
-  3. reset or reset dialogue - Resets current ChatGPT dialogue and allows to start new conversation
-  4. sendMsg **{telegramId}|{request to ChatGPT}** - Sends request to ChatGPT and return response to specified telegram user
-  5. start - Displays keyboard
-    
-To ask the question to ChatGPT just send some question to this chat. 
-
-Example: What is pizza?`;
-
-  bot.sendMessage(msg.chat.id, help, {
     parse_mode: "Markdown",
   });
 });
 
-bot.onText(/\/users/, (msg) => {
-  const chatId = msg.chat.id;
-  if (checkPesmission(chatId)) {
-    let users = accessAllowedUsers.join("\n");
-    bot.sendMessage(chatId, users, {
-      parse_mode: "Markdown",
-    });
-  }
+bot.onText(/\/help/, (msg) => {
+  bot.sendMessage(msg.chat.id, welcomeMessage, {
+    parse_mode: "Markdown",
+  });
 });
+//#endregion
 
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
