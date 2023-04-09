@@ -1,5 +1,8 @@
 # Telegram bot with integrated ChatGPT
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=evgenyvodyannikov_TelegramAI&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=evgenyvodyannikov_TelegramAI)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=evgenyvodyannikov_TelegramAI&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=evgenyvodyannikov_TelegramAI)
+
 This repository contains the code for a Telegram bot that allows users to ask questions and receive answers from ChatGPT.
 
 The bot is built using the NodeJs and relies on the [node-telegram-bot-api](https://github.com/yagop/node-telegram-bot-api) and the [node-chatgpt-api](https://github.com/waylaidwanderer/node-chatgpt-api) Github projects.
