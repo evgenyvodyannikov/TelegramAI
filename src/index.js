@@ -52,10 +52,7 @@ let welcomeMessage =
 let accessAllowedUsers = [telegramAdminId, telegramUserId];
 
 const checkPesmission = (userId) => {
-  if (accessAllowedUsers.includes(String(userId))) {
-    return true;
-  }
-  return false;
+  return accessAllowedUsers.includes(String(userId));
 };
 //#endregion
 
