@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import TelegramBot from "node-telegram-bot-api";
 import { KeyvFile } from "keyv-file";
 import ChatGPTClient from "@waylaidwanderer/chatgpt-api";
-import pg from "pg";
+import {init, getUsers} from './controllers/postgreSQL.js'
 
 dotenv.config();
 
@@ -11,37 +11,11 @@ const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
 const accessToken = process.env.OPENAI_ACCESS_TOKEN;
 //#endregion
 
-//#region PostgreSQL Connection
-const client = new pg.Client();
-await client.connect();
-
-const getUsers = async () => {
-  const result = await client.query({
-    rowMode: "array",
-    text:
-      "SELECT users.id, users.telegram_id, users.first_name, users.last_name, users.is_admin, languages.code " +
-      "FROM users " +
-      "INNER JOIN languages ON users.prefered_lang = languages.id",
-  });
-
-  const rows = result.rows;
-  const users = [];
-
-  rows.forEach((item) => {
-    users.push({
-      id: item[0],
-      telegram_id: item[1],
-      name: item[2] + " " + item[3],
-      isAdmin: item[4],
-      lang: item[5],
-    });
-  });
-
-  return users;
-};
+//#region PostgreSQL
+await init();
 
 const users = await getUsers();
-
+console.log(users);
 //#endregion
 
 //#region ChatGPT Client Settings
@@ -50,13 +24,6 @@ const clientOptions = {
     model: "gpt-3.5-turbo",
     temperature: 0,
   },
-  // (Optional) Set custom instructions instead of "You are ChatGPT...".
-  // promptPrefix: 'You are Bob, a cowboy in Western times...',
-  // (Optional) Set a custom name for the user
-  // userLabel: 'User',
-  // (Optional) Set a custom name for ChatGPT
-  // chatGptLabel: 'ChatGPT',
-  // (Optional) Set to true to enable `console.debug()` logging
   debug: false,
 };
 
