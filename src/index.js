@@ -2,14 +2,46 @@ import dotenv from "dotenv";
 import TelegramBot from "node-telegram-bot-api";
 import { KeyvFile } from "keyv-file";
 import ChatGPTClient from "@waylaidwanderer/chatgpt-api";
+import pg from "pg";
 
 dotenv.config();
 
 //#region Env Variables
 const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
 const accessToken = process.env.OPENAI_ACCESS_TOKEN;
-const telegramAdminId = process.env.TELEGRAM_ADMIN_ID;
-const telegramUserId = process.env.TELEGRAM_USER_ID;
+//#endregion
+
+//#region PostgreSQL Connection
+const client = new pg.Client();
+await client.connect();
+
+const getUsers = async () => {
+  const result = await client.query({
+    rowMode: "array",
+    text:
+      "SELECT users.id, users.telegram_id, users.first_name, users.last_name, users.is_admin, languages.code " +
+      "FROM users " +
+      "INNER JOIN languages ON users.prefered_lang = languages.id",
+  });
+
+  const rows = result.rows;
+  const users = [];
+
+  rows.forEach((item) => {
+    users.push({
+      id: item[0],
+      telegram_id: item[1],
+      name: item[2] + " " + item[3],
+      isAdmin: item[4],
+      lang: item[5],
+    });
+  });
+
+  return users;
+};
+
+const users = await getUsers();
+
 //#endregion
 
 //#region ChatGPT Client Settings
@@ -49,10 +81,8 @@ let welcomeMessage =
   "[GitHub.com](https://github.com/evgenyvodyannikov/TelegramAI)\n\n" +
   "To ask the question to ChatGPT just send some text to this chat, for example: *What is pizza?*";
 
-let accessAllowedUsers = [telegramAdminId, telegramUserId];
-
 const checkPesmission = (userId) => {
-  return accessAllowedUsers.includes(String(userId));
+  return users.filter(item => item.telegram_id == userId).length > 0;
 };
 //#endregion
 
